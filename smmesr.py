@@ -1183,7 +1183,7 @@ def derep(pars, rep):
     for i in np.arange(len(pars)):
         outpars[i] = [np.mean(pars[i][j * rep:j * rep + rep])
                       for j in np.arange(len(outpars[i]))]
-    return outpars
+    return np.array(outpars)
 
 
 def cav_rep_load_all_fit(path, dir, rep, snip, span, deg=2, patt=creppatt,

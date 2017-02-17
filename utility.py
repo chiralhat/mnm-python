@@ -14,6 +14,7 @@ import zipfile
 import os
 import fnmatch
 import glob
+import re
 import matplotlib.pyplot as plt
 from functools import partial
 import scipy.constants as sc
@@ -21,6 +22,9 @@ import scipy.constants as sc
 # Field offsets
 # Offset when sweep rate is 10.8 Oe/s
 h_off_10 = -93.5
+
+# Regexp pattern for conflict files
+conf_patt = '(.*) \(SFConflict.*'
 
 
 def plot(*args, **kwargs):
@@ -62,6 +66,23 @@ def get_zip_names(path, dir, infold=True):
     return names, archive
 
 
+def get_folder_names(path, dir):
+    """Loads the filenames for the data matching 'path' in the location 'dir'
+    ('dir' does not have to end with '.zip').
+
+    Returns a list of filenames and the zip archive."""
+    names = glob.glob(os.path.join(dir, path))
+    conflicts = [re.match(conf_patt, name) for name in names]
+    c_inds = np.where(conflicts)[0]
+    if len(c_inds) > 0:
+        conflicts = [conflicts[i].groups()[0] for i in c_inds]
+        conf_names = [conf + '.txt' for conf in conflicts]
+        [os.remove(os.path.join(dir, name)) for name in conf_names]
+        [os.rename(names[i], new) for i, new in zip(c_inds, conf_names)]
+        names = glob.glob(os.path.join(dir, path))
+    return names
+
+
 def get_zip_data(path, dir, skip=0):
     """Loads the data matching 'path' in the location 'dir'
     ('dir' does not have to end with '.zip').
@@ -80,7 +101,7 @@ def get_data_names(path, dir, skip=0):
 
     Returns a list of datasets and a list of filenames."""
     if os.path.isdir(dir):
-        names = glob.glob(os.path.join(dir, path))
+        names = get_folder_names(path, dir)
         data = np.array([np.loadtxt(n, skiprows=skip).transpose()
                          for n in names])
     else:
@@ -95,7 +116,7 @@ def get_data_exclude_names(path, dir, excl, skip=0):
 
     Returns a list of datasets and a list of filenames."""
     if os.path.isdir(dir):
-        prenames = glob.glob(os.path.join(dir, path))
+        prenames = get_folder_names(path, dir)
         names = [x for x in prenames if not x.endswith(excl)]
         data = np.array([np.loadtxt(n, skiprows=skip).transpose()
                          for n in names])
@@ -309,10 +330,16 @@ def func_fit(func, data, guess, **kwargs):
     Returns a list with three elements: an array with the fit parameters;
     an array with the uncertainties in those parameters;
     the adjusted R-squared for the fit."""
-    fit = sop.curve_fit(func, data[0], data[1], guess, **kwargs)
-    err = np.sqrt(np.diag(fit[1]))
-    fitdat = func(data[0], *fit[0])
-    R2b = r2bar(data[1], fitdat, len(fit[0]))
+    try:
+        fit = sop.curve_fit(func, data[0], data[1], guess, **kwargs)
+        err = np.sqrt(np.diag(fit[1]))
+        fitdat = func(data[0], *fit[0])
+        R2b = r2bar(data[1], fitdat, len(fit[0]))
+    except RuntimeError:
+        n = len(guess)
+        fit = [np.zeros(n)]
+        err = np.zeros(n)
+        R2b = 0
     return [fit[0], err, R2b]
 
 
@@ -397,11 +424,10 @@ def lor_fit(data, skew=1, full=1):
 
     def lorentzian(x, b, a, w, f):
         return lorentzianslope(x, b, a, w, f, slope, GuessF)
-    fit = sop.curve_fit(lorentzian, data[0][fitp[0]:fitp[1]], data[1][
-                        fitp[0]:fitp[1]], [GuessB, GuessA, GuessW, GuessF])
-    fitdat = lorentzian(data[0], *fit[0])
-    R2b = r2bar(data[1], fitdat, len(fit[0]))
-    return [fit[0], np.sqrt(np.diag(fit[1])), slope, R2b]
+    fitdata = np.array([data[0][fitp[0]:fitp[1]], data[1][fitp[0]:fitp[1]]])
+    guess = [GuessB, GuessA, GuessW, GuessF]
+    fit, err, R2b = func_fit(lorentzian, fitdata, guess)
+    return [fit, err, slope, R2b]
 
 
 def plot_lor_fit(data, skew=1, full=1, plt=plt):
@@ -681,6 +707,17 @@ def sub_end_df(df, last=True):
         inds = [df[col].dropna().first_valid_index() for col in df]
     ends = np.diag(df.loc[inds].values)
     return df.subtract(ends)
+
+
+def div_back_df(df, ind, backind):
+    divdf = div_end_df(df)
+    return divdf[ind].interpolate() / divdf[backind].interpolate().values
+
+
+def div_back_dfs(df, backind):
+    inds = [ind for ind, _ in df.iteritems() if ind != backind]
+    divdf = pd.concat([div_back_df(df, ind, backind) for ind in inds], axis=1)
+    return divdf.dropna()
 
 
 def subtract_endpoint(data):
