@@ -216,15 +216,16 @@ def atanslope(x, b, a, w, f, slope, gf):
 def atannoback(x, a, w, f):
     return atanfit(x, 0, a, w, f)
 
+
 # utility functions
-# Power conversion between mW and dBm
+# Power conversion between W and dBm
 
 
-def mw_to_dbm(mW):
+def w_to_dbm(mW):
     return 10 * np.log10(mW) + 30
 
 
-def dbm_to_mw(dBm):
+def dbm_to_w(dBm):
     return 10**((dBm - 30) / 10)
 
 
