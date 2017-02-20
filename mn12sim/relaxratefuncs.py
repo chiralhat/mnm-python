@@ -63,6 +63,11 @@ b60_matrix = 231 * Sz**6 - (315 * s * (s + 1) - 735) * Sz**4 + \
 b64_matrix = 1 / 4 * ((11 * Sz**2 - (s * (s + 1) + 38)) *
                       c_matrix + c_matrix * (11 * Sz**2 - (s * (s + 1) + 38)))
 
+H_diag = d * Sz**2 + b * Sz**4 + b60 * b60_matrix
+H_off = b64 * b64_matrix - c * c_matrix
+ham_0 = H_diag + H_off
+
+
 def h_broaden(H, Hwid, nloop=50):
     """Produces a Gaussian field distribution around H with width Hwid and size
     nloop."""
@@ -73,15 +78,14 @@ def h_broaden(H, Hwid, nloop=50):
     return [Hbroad, Hweights]
 
 
-def ham_0(H, phi=0, Hz=-400):
+def ham_field(H, phi=0, Hz=-400):
     """Assembles the Hamiltonian for a given field, where H is the transverse
     field, phi is the angle in the hard plane, and Hz is the longitudinal field
     """
-    H_diag = d * Sz**2 + b * Sz**4 + b60 * b60_matrix
-    H_off = b64 * b64_matrix - c * c_matrix
+    
     H_perp = gperp * (Mb / Kb) * H * (Sx * np.cos(phi) + Sy * np.sin(phi))
     H_field = gpara * (Mb / Kb) * Hz * Sz + H_perp
-    return H_diag + H_off - H_field
+    return ham_0 - H_field
 
 
 def estate(H, phi=0, Hz=-400):
@@ -90,7 +94,7 @@ def estate(H, phi=0, Hz=-400):
     and Hz is the longitudinal field.
     """
 
-    return ham_0(H, phi, Hz).eigenstates()
+    return ham_field(H, phi, Hz).eigenstates()
 
 
 def s1(states):
