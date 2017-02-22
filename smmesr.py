@@ -101,7 +101,9 @@ def load_vna_data(path, dir, mod=0, patt=defNSpatt):
 
     Returns a list with: a list of datasets; an array of experimental fields;
     an array of experimental temperatures; one of the matching filenames."""
-    data, names, archive = ut.get_data_exclude_names(path + '*', dir, 'Fit.txt', 1)
+    namex = ('Min.txt', 'Fit.txt')
+    data, names, archive = ut.get_data_exclude_names(path + '*', dir,
+                                                     namex, 1)
 
     def matchnum(name):
         [temp, num] = re.match(patt, name).groups()

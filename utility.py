@@ -112,7 +112,7 @@ def get_data_names(path, dir, skip=0):
 def get_data_exclude_names(path, dir, excl, skip=0):
     """Loads the data matching 'path' in the location 'dir'
     ('dir' can either be a folder or a zip archive),
-    which does not end with 'excl'.
+    which does not end with the suffixes in the tuple 'excl'.
 
     Returns a list of datasets and a list of filenames."""
     if os.path.isdir(dir):
