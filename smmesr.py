@@ -101,7 +101,7 @@ def load_vna_data(path, dir, mod=0, patt=defNSpatt):
 
     Returns a list with: a list of datasets; an array of experimental fields;
     an array of experimental temperatures; one of the matching filenames."""
-    data, names, _ = ut.get_data_exclude_names(path + '*', dir, 'Min.txt', 1)
+    data, names, archive = ut.get_data_exclude_names(path + '*', dir, 'Fit.txt', 1)
 
     def matchnum(name):
         [temp, num] = re.match(patt, name).groups()
@@ -109,8 +109,12 @@ def load_vna_data(path, dir, mod=0, patt=defNSpatt):
     [temps, nums] = np.array(list(map(matchnum, names))).transpose()
 
     def fields1(path):
-        with open(path) as f:
-            first_line = f.readline()
+        if archive == 0:
+            with open(path) as f:
+                first_line = f.readline()
+        else:
+            with archive.open(path) as f:
+                first_line = f.readline().decode('utf-8')
         return float(re.match(filepatt, first_line).groups()[0])
     fields = np.array([fields1(nam) for nam in names])
     sortarr = np.argsort(nums)
@@ -118,6 +122,8 @@ def load_vna_data(path, dir, mod=0, patt=defNSpatt):
         sortarr], fields[sortarr], temps[sortarr]]
     if mod != 0:
         data = np.array([xp_to_quad(dat, mod) for dat in data])
+    if archive != 0:
+        archive.close()
     return [data, fields, temps, os.path.split(names[0])[1]]
 
 
