@@ -35,6 +35,9 @@ colnames = ["Magnetic Field", "Base", "B-error", "Peak Amplitude", "A-error",
             "FWHH", "W-error", "Central Frequency", "Frequency Shift",
             "F-error", "R-Squared", "Q-Value", "Q-error" "Minimum",
             "Temperature"]
+pulse_colnames = ["Magnetic Field", "Base", "B-error", "Peak Amplitude",
+                  "A-error", "Tau", "T-error", "Q-Value", "Q-error",
+                  "Frequency", "R-Squared", "Temperature"]
 
 # Functions for VNA fitting
 
@@ -208,10 +211,7 @@ def load_fit_vna_out(path, dir, outdir, skew=1, full=1, mod=0, patt=defNSpatt,
     outname = res + ' ' + dat + ' ' + pref + ' ' + power + \
         ' ' + str(tout[0][-1]) + 'K Fit Analysis.csv'
     outpath = os.path.join(outdir, outname)
-    outnames = ["Magnetic Field", "Base", "B-error", "Peak Amplitude",
-                "A-error", "FWHH", "W-error", "Central Frequency",
-                "Frequency Shift", "F-error", "R-Squared", "Q-Value",
-                "Q-error", "Minimum", "Temperature"]
+    outnames = colnames
     data_save_out(outpath, outnames, tout)
     return out
 
@@ -788,9 +788,7 @@ def load_fit_pulse_out(path, dir, outdir, timoff=0, xpconv=0, fitind=1,
     outpath = os.path.join(outdir, outname)
     with open(outpath, 'w') as csvfile:
         fout = csv.writer(csvfile, lineterminator='\n')
-        fout.writerow(["Magnetic Field", "Base", "B-error", "Peak Amplitude",
-                       "A-error", "Tau", "T-error", "Q-Value", "Q-error",
-                       "Frequency", "R-Squared", "Temperature"])
+        fout.writerow(pulse_colnames)
         for row in out:
             fout.writerow(row)
     return out.transpose()
@@ -841,8 +839,7 @@ def load_fit_rep_ps_out(path, dir, outdir, freq, reps=1, timoff=0, xpconv=0,
     outpath = os.path.join(outdir, outname)
     with open(outpath, 'w') as csvfile:
         fout = csv.writer(csvfile, lineterminator='\n')
-        fout.writerow(["Magnetic Field", "Amplitude",
-                       "Q-Value", "Shift", "Temperature"])
+        fout.writerow(pulse_colnames)
         for row in out:
             fout.writerow(row)
     return pout
@@ -1360,7 +1357,7 @@ name_dict = {'Magnetic Field': 'H', 'Base': 'B', 'B-error': 'dB',
              'Q-Value': 'Q', 'Q-value': 'Q', 'Q-error': 'dQ',
              'Minimum': 'min', 'Temperature': 'T', 'Amplitude': 'A',
              'Shift': 'fs', 'Width': 'W', 'Frequency': 'f', 'Tau': 't',
-             'T-error': 'dt'}
+             'T-error': 'dt', 'Q-Ch2': 'Q2'}
 
 
 def lfp(fitpath, offset=0):
@@ -1384,4 +1381,29 @@ def load_fit(path, dir, offset=0):
 def load_pulse_fits(paths, dir, iters, offset=0):
     dfs = [load_fit(path, dir, offset) for path in paths]
     outpan = pd.Panel({label: df for label, df in zip(iters, dfs)})
+    return outpan
+
+
+# Load data into a useful data container, with 'offset' being the field offset
+# due to inductive effects.
+def proc_data(datalist, labels, offset=0):
+    dfs = []
+    for data in datalist:
+        datalength = len(data)
+        if datalength == 2:
+            data = data[0]
+        data[0] += offset
+        if datalength == 11:
+            names = [name_dict[n] for n in np.delete(pulse_colnames[1:], 8)]
+        elif datalength == 12:
+            names = [name_dict[n] for n in pulse_colnames[1:]]
+        elif datalength == 15:
+            names = [name_dict[n] for n in colnames[1:]]
+        df = pd.DataFrame(data=data[1:].transpose(),
+                          index=data[0].transpose(), columns=names)
+        df = df[~df.index.duplicated(keep='first')]
+        df.H = df.index
+        dfs.append(df)
+    outpan = pd.Panel({label: df.astype(float) for label, df in
+                       zip(labels, dfs)})
     return outpan
