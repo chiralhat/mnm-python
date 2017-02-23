@@ -33,7 +33,7 @@ filepatt = '^K  ([+-]?\\d+(?:\\.\\d+)?)*'
 # Names of the columns in an exported dataset
 colnames = ["Magnetic Field", "Base", "B-error", "Peak Amplitude", "A-error",
             "FWHH", "W-error", "Central Frequency", "Frequency Shift",
-            "F-error", "R-Squared", "Q-Value", "Q-error" "Minimum",
+            "F-error", "R-Squared", "Q-Value", "Q-error", "Minimum",
             "Temperature"]
 pulse_colnames = ["Magnetic Field", "Base", "B-error", "Peak Amplitude",
                   "A-error", "Tau", "T-error", "Q-Value", "Q-error",
@@ -1360,11 +1360,11 @@ name_dict = {'Magnetic Field': 'H', 'Base': 'B', 'B-error': 'dB',
              'T-error': 'dt', 'Q-Ch2': 'Q2'}
 
 
-def lfp(fitpath, offset=0):
+def lfp(fitpath, offset=0, delim=','):
     with open(fitpath) as f:
         colnames = f.readline()[:-1].split(sep=',')
     ColNames = [name_dict[n] for n in colnames]
-    data = np.loadtxt(fitpath, delimiter=',', skiprows=1).transpose()
+    data = np.loadtxt(fitpath, delimiter=delim, skiprows=1).transpose()
     data[0] += offset  # This is equivalent to data[0]=data[0]+offset
 
     df = pd.DataFrame(data=data.transpose(), index=data[0].transpose(),
@@ -1373,13 +1373,13 @@ def lfp(fitpath, offset=0):
     return df
 
 
-def load_fit(path, dir, offset=0):
+def load_fit(path, dir, offset=0, delim=','):
     fitpath = os.path.join(dir, path)
-    return lfp(fitpath, offset)
+    return lfp(fitpath, offset, delim)
 
 
-def load_pulse_fits(paths, dir, iters, offset=0):
-    dfs = [load_fit(path, dir, offset) for path in paths]
+def load_pulse_fits(paths, dir, iters, offset=0, delim=','):
+    dfs = [load_fit(path, dir, offset, delim) for path in paths]
     outpan = pd.Panel({label: df for label, df in zip(iters, dfs)})
     return outpan
 
