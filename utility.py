@@ -275,7 +275,7 @@ def derep(pars, rep):
 
     Returns an array of arrays of averaged fit parameters."""
     pars = np.array(pars)
-    outpars = [np.zeros(len(pars[i]) / rep) for i in np.arange(len(pars))]
+    outpars = [np.zeros(int(len(pars[i])/rep)) for i in np.arange(len(pars))]
     for i in np.arange(len(pars)):
         outpars[i] = [np.mean(pars[i][j * rep:j * rep + rep])
                       for j in np.arange(len(outpars[i]))]
