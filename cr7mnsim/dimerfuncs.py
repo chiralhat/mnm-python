@@ -75,12 +75,12 @@ def cr_h_rot(E1,E2,J,Jp):
 #Define single qubit Hamiltonian
 def cr_ham_single(h,D=24.2,E=1.95,g=1.96,theta=0):
     hscale=ubG*g
-    sx,sy,sz=qt.jmat(1)
+    sx,sy,sz,_=spin_system(1)
     return -D*sz**2+E*(sx**2-sy**2)+h*hscale*(np.cos(theta*np.pi/180)*sz+np.sin(theta*np.pi/180)*sx)
 
 def cr_ham_single_shalf(h,E=1.95,g=1.96,theta=0):
     hscale=ubG*g
-    sx,sy,sz=qt.jmat(1/2)
+    sx,sy,sz, _=spin_system(1/2)
     return E*(sx**2-sy**2)+h*hscale*(np.cos(theta*np.pi/180)*sz+np.sin(theta*np.pi/180)*sx)
 
 #Quantum control functions: these go into the setup of the time-dep hamiltonian
