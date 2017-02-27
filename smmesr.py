@@ -1374,7 +1374,7 @@ def lfp(fitpath, offset=0, delim=','):
 
 
 def load_fit(path, dir, offset=0, delim=','):
-    fitpath = os.path.join(dir, path)
+    fitpath = glob.glob(os.path.join(dir, path+'*'))[0]
     return lfp(fitpath, offset, delim)
 
 
