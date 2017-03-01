@@ -1378,8 +1378,8 @@ def load_fit(path, dir, offset=0, delim=','):
     return lfp(fitpath, offset, delim)
 
 
-def load_pulse_fits(paths, dir, iters, offset=0, delim=','):
-    dfs = [load_fit(path, dir, offset, delim) for path in paths]
+def load_fits(path, dir, iters, offset=0, delim=','):
+    dfs = [load_fit(path % it, dir, offset, delim) for it in iters]
     outpan = pd.Panel({label: df for label, df in zip(iters, dfs)})
     return outpan
 
