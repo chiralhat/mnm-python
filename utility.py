@@ -28,7 +28,7 @@ conf_patt = '(.*) \(SFConflict.*'
 
 
 def plot(*args, **kwargs):
-    if len(args[0]) == 2:
+    if len(args) !=0 and len(args[0]) == 2:
         args = list(args)
         args.insert(1, args[0][1])
         args[0] = args[0][0]
