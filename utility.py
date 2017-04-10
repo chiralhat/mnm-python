@@ -83,33 +83,34 @@ def get_folder_names(path, dir):
     return names
 
 
-def get_zip_data(path, dir, skip=0):
+def get_zip_data(path, dir, skip=0, delim='\t', infold=True):
     """Loads the data matching 'path' in the location 'dir'
     ('dir' does not have to end with '.zip').
 
     Returns a list of datasets and a list of filenames."""
-    names, archive = get_zip_names(path, dir)
-    data = [np.loadtxt(archive.open(n), skiprows=skip).transpose()
-            for n in names]
+    names, archive = get_zip_names(path, dir, infold)
+    data = [np.loadtxt(archive.open(n), skiprows=skip,
+                       delimiter=delim).transpose() for n in names]
     archive.close()
     return data, names
 
 
-def get_data_names(path, dir, skip=0):
+def get_data_names(path, dir, skip=0, delim='\t', infold=True):
     """Loads the data matching 'path' in the location 'dir'
     ('dir' can either be a folder or a zip archive).
 
     Returns a list of datasets and a list of filenames."""
     if os.path.isdir(dir):
         names = get_folder_names(path, dir)
-        data = np.array([np.loadtxt(n, skiprows=skip).transpose()
+        data = np.array([np.loadtxt(n, skiprows=skip, 
+                                    delimiter=delim).transpose()
                          for n in names])
     else:
-        data, names = get_zip_data(path, dir, skip)
+        data, names = get_zip_data(path, dir, skip, delim, infold)
     return data, names
 
 
-def get_data_exclude_names(path, dir, excl, skip=0):
+def get_data_exclude_names(path, dir, excl, skip=0, delim='\t', infold=True):
     """Loads the data matching 'path' in the location 'dir'
     ('dir' can either be a folder or a zip archive),
     which does not end with the suffixes in the tuple 'excl'.
@@ -118,27 +119,29 @@ def get_data_exclude_names(path, dir, excl, skip=0):
     if os.path.isdir(dir):
         prenames = get_folder_names(path, dir)
         names = [x for x in prenames if not x.endswith(excl)]
-        data = np.array([np.loadtxt(n, skiprows=skip).transpose()
+        data = np.array([np.loadtxt(n, skiprows=skip,
+                                    delimiter=delim).transpose()
                          for n in names])
         archive = 0
     else:
-        prenames, archive = get_zip_names(path, dir)
+        prenames, archive = get_zip_names(path, dir, infold)
         names = [x for x in prenames if not x.endswith(excl)]
-        data = np.array([np.loadtxt(archive.open(n),
-                                    skiprows=1).transpose() for n in names])
+        data = np.array([np.loadtxt(archive.open(n), skiprows=1,
+                                    delimiter=delim).transpose()
+                         for n in names])
     return data, names, archive
 
 
-def get_data(path, dir, skip=0):
-    return get_data_names(path, dir, skip)[0]
+def get_data(path, dir, skip=0, delim='\t', infold=True):
+    return get_data_names(path, dir, skip, delim, infold)[0]
 
 
-def get_one_data(path, dir, skip=0):
+def get_one_data(path, dir, skip=0, delim='\t', infold=True):
     """Loads a single dataset matching 'path' in the location 'dir'
     ('dir' can either be a folder or a zip archive).
 
     Returns the dataset."""
-    return get_data(path, dir, skip)[0]
+    return get_data(path, dir, skip, delim, infold)[0]
 
 # Fitting functions
 
@@ -771,55 +774,60 @@ def power_to_string(pows):
         return "{:.1f}".format(pow)
     return list(map(form_pow, pows))
 
+
+
 # Conversion functions
 # This function converts a wavenumber in 1/cm to a frequency in GHz
-
-
 def ktof(k):
     return sc.c * 100 * k * 1e-9
+
+
 # This function converts a frequency in GHz to a wavenumber in 1/cm
-
-
 def ftok(f):
     return f * 1e9 / sc.c / 100
+
+
 # This function converts a temperature in K to a frequency in GHz
-
-
 def ttof(t):
     return sc.k * t / sc.h * 1e-9
+
+
 # This function converts a frequency in GHz to a temperature in K
-
-
 def ftot(f):
     return f * 1e9 / sc.k * sc.h
+
+
 # This function converts an energy in J to eV
-
-
 def JtoeV(J):
     return J * 6.242e18
+
+
 # This function converts a temperature in K to an energy in eV
-
-
 def ttoeV(t):
     return JtoeV(sc.k * t)
+
+
+# This function converts a frequency in GHz to an energy in eV
+def ftoeV(f):
+    return JtoeV(sc.h * f * 1e9)
+
+
 # This function converts a wavenumber in 1/cm to a temperature in K
-
-
 def ktot(k):
     return ktof(k) * 1e9 * sc.h / sc.k
+
+
 # This function converts a wavenumber in 1/cm to an energy in J
-
-
 def ktoJ(k):
     return ktof(k) * 1e9 * sc.h
+
+
 # This function converts an energy in J to a temperature in K
-
-
 def Jtot(J):
     return J / sc.k
+
+
 # temperature in K to wavenumber in 1/cm
-
-
 def ttok(t):
     return ftok(ttof(t))
 
