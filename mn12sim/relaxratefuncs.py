@@ -78,23 +78,23 @@ def h_broaden(H, Hwid, nloop=50):
     return [Hbroad, Hweights]
 
 
-def ham_field(H, phi=0, Hz=-400):
+def ham_field(Hx, Hy=0, Hz=-400):
     """Assembles the Hamiltonian for a given field, where H is the transverse
     field, phi is the angle in the hard plane, and Hz is the longitudinal field
     """
     
-    H_perp = gperp * (Mb / Kb) * H * (Sx * np.cos(phi) + Sy * np.sin(phi))
+    H_perp = gperp * (Mb / Kb) * (Hx*Sx + Hy*Sy)
     H_field = gpara * (Mb / Kb) * Hz * Sz + H_perp
     return ham_0 - H_field
 
 
-def estate(H, phi=0, Hz=-400):
+def estate(Hx, Hy=0, Hz=-400):
     """Finds the eigenenergies and eigenstates of the Hamiltonian at a given
     field, where H is the transverse field, phi is the angle in the hard plane,
     and Hz is the longitudinal field.
     """
 
-    return ham_field(H, phi, Hz).eigenstates()
+    return ham_field(Hx, Hy, Hz).eigenstates()
 
 
 def s1(states):
@@ -121,12 +121,12 @@ def boltz(E, T):
                       for k in np.arange(21)] for i in np.arange(21)])
 
 
-def rate(H, T, ph1, ph2, phi=0, Hz=-400):
+def rate(Hx, T, ph1, ph2, Hy=0, Hz=-400):
     """Calculates the rate matrix for Mn12 given a transverse field H, a temp
     T, prefactors ph1 and ph2, hard plane angle phi, and longitudinal field Hz.
     """
 
-    energies, states = estate(H, phi, Hz)
+    energies, states = estate(Hx, Hy, Hz)
     b_t = boltz(energies, T)
     s1element = s1(states)
     s2element = s2(states)
@@ -142,26 +142,26 @@ def rate(H, T, ph1, ph2, phi=0, Hz=-400):
     return qt.Qobj(np.array(out).transpose())
 
 
-def rate_map(H, phi=0, Hz=-400, T=3.21):
+def rate_map(Hx, Hy=0, Hz=-400, T=3.21):
     """Finds the slowest nonzero eigenvalue of the rate matrix for a given
     transverse field H, hard plane angle phi, and longitudinal field Hz."""
 
-    return np.sort(np.abs(rate(H, T, ph1, ph2, phi, Hz).eigenenergies()))[1]
+    return np.sort(np.abs(rate(Hx, T, ph1, ph2, Hy, Hz).eigenenergies()))[1]
 
 
-def rate_broad(H, Hwid, mod=1, phi=0, Hz=-400, nloop=50):
+def rate_broad(Hx, Hwid, mod=1, Hy=0, Hz=-400, nloop=50):
     """Does the same calculation as rate_map, but including the application of
     field broadening."""
 
-    if isinstance(H, int) or isinstance(H, np.int32):
-        Hbroad, Hweights = h_broaden(H, Hwid, nloop)
+    if isinstance(Hx, int) or isinstance(Hx, np.int32):
+        Hbroad, Hweights = h_broaden(Hx, Hwid, nloop)
         return mod * \
-            np.sum(Hweights * np.array([rate_map(H, phi, Hz) for H in Hbroad]))
+            np.sum(Hweights*np.array([rate_map(Hx, Hy, Hz) for Hx in Hbroad]))
     else:
-        si = len(H)
+        si = len(Hx)
         rates = np.zeros(si)
         for i in range(si):
-            Hbroad, Hweights = h_broaden(H[i], Hwid, nloop)
+            Hbroad, Hweights = h_broaden(Hx[i], Hwid, nloop)
             rates[i] = mod * \
-                np.sum(Hweights * np.array([rate_map(H, phi) for H in Hbroad]))
+                np.sum(Hweights*np.array([rate_map(Hx, Hy) for Hx in Hbroad]))
         return rates
