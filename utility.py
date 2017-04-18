@@ -474,7 +474,7 @@ def lor_fit_range(fulldata, low, high, skew=1):
 
 
 def plot_lor_fit_range(data, low, high, skew=1, sub=0, plt=plt):
-    """Fits a Lorentzian function to a dataset and plot the result.
+    """Fits a Gaussian function to a dataset and plot the result.
 
     'fulldata' is a data array with elements [x-axis data,y-axis data];
     'low' is the lowest x-axis point to fit;
@@ -500,7 +500,7 @@ def plot_lor_fit_range(data, low, high, skew=1, sub=0, plt=plt):
 
 
 def gauss_fit_abs_range(fulldata, low, high, skew=1):
-    """Fits a Lorentzian function to a dataset in a specified window,
+    """Fits a Gaussian function to a dataset in a specified window,
     taking the absolute value of x.
 
     'fulldata' is a data array with elements [x-axis data,y-axis data];
@@ -526,7 +526,7 @@ def gauss_fit_abs_range(fulldata, low, high, skew=1):
 
 
 def plot_gauss_fit_abs_range(data, low, high, skew=1, plt=plt):
-    """Fits a Lorentzian function to a dataset and plot the result,
+    """Fits a Gaussian function to a dataset and plot the result,
     taking the absolute value of x.
 
     'fulldata' is a data array with elements [x-axis data,y-axis data];
