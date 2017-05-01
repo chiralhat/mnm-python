@@ -783,7 +783,7 @@ def load_fit_pulse_out(path, dir, outdir, timoff=0, xpconv=0, fitind=1,
     # Get the initial part of the path and the power from the name
     [pref, ave, power] = re.match(outpatt, name).groups()
     outname = res + ' ' + dat + ' ' + pref + \
-        (' %.2fMHz ' % out[0][-3]) + ave + ' ' + power + \
+        ' {0:.2f}MHz '.format(out[0][-3]) + ave + ' ' + power + \
         ' ' + str(out[0][-1]) + 'K Fit Analysis.csv'
     outpath = os.path.join(outdir, outname)
     with open(outpath, 'w') as csvfile:
@@ -1332,7 +1332,7 @@ def cav_load_fit_out(path, postpath, dir, func, outdir, *args, **kwargs):
     # Get the initial part of the path and the power from the name
     tout = out.transpose()
     outname = res + ' ' + dat + ' ' + path + \
-        ' %.1fK Fit Analysis.csv' % float(tout[0][-1])
+        ' {0:.1f}K Fit Analysis.csv'.format(float(tout[0][-1]))
     outpath = os.path.join(outdir, outname)
     data_save_out(outpath, colnames, tout)
     return out
@@ -1379,7 +1379,7 @@ def load_fit(path, dir, offset=0, delim=','):
 
 
 def load_fits(path, dir, iters, offset=0, delim=','):
-    dfs = [load_fit(path % it, dir, offset, delim) for it in iters]
+    dfs = [load_fit(path.format(it), dir, offset, delim) for it in iters]
     outpan = pd.Panel({label: df for label, df in zip(iters, dfs)})
     return outpan
 
